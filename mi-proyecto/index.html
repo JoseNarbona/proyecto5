@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Precios Mercadona</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+    li { padding: 4px 0; border-bottom: 1px solid #eee; }
+    button { padding: 10px 20px; background: #1a9e5c; color: white; border: none;
+             border-radius: 6px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #148a4e; }
+    #estado { color: #888; margin: 1rem 0; }
+  </style>
+</head>
+<body>
+
+<h1>🛒 Productos de Mercadona</h1>
+<button onclick="cargar()">Cargar productos</button>
+<p id="estado"></p>
+<ul id="lista"></ul>
+
+<script>
+  const PROXY = "https://TU-PROYECTO.vercel.app/api/mercadona";
+
+  async function cargar() {
+    document.getElementById("estado").textContent = "Cargando categorías...";
+    document.getElementById("lista").innerHTML = "";
+
+    const res = await fetch(PROXY);
+    const data = await res.json();
+
+    let total = 0;
+
+    for (const cat of data.results) {
+      for (const sub of cat.categories) {
+        // Cargar cada subcategoría por separado
+        const subRes = await fetch(`${PROXY}?category=${sub.id}`);
+        const subData = await subRes.json();
+
+        for (const prod of subData.products || []) {
+          const li = document.createElement("li");
+          const precio = prod.price_instructions?.unit_price ?? "—";
+          const unidad = prod.price_instructions?.reference_format ?? "";
+          li.textContent = `${prod.display_name} — ${precio}€ ${unidad}`;
+          document.getElementById("lista").appendChild(li);
+          total++;
+        }
+      }
+    }
+
+    document.getElementById("estado").textContent = `✅ ${total} productos cargados`;
+  }
+</script>
+
+</body>
+</html>
